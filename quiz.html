@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz – BleikerQuizzen</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    html, body { background: #1a1a3e !important; }
+    nav { background: #13132e; }
+    .quiz-wrapper { max-width: 780px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .quiz-logo { display: flex; justify-content: center; margin-bottom: 2rem; }
+    .quiz-logo img { height: 90px; width: auto; }
+    .navn-felt { background: #2a2a5a; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; }
+    .navn-felt label { display: block; color: #ffffff; font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; }
+    .navn-felt input { padding: 0.75rem 1.25rem; border: none; border-radius: 8px; font-family: 'Source Sans 3', sans-serif; font-size: 1rem; width: 100%; max-width: 340px; background: #ffffff; color: #1a1a3e; outline: none; text-align: center; }
+    .navn-hint { color: rgba(255,255,255,0.72); font-size: 0.92rem; margin-top: 0.85rem; }
+    .q-card { background: #2a2a5a; border-radius: 16px; padding: 2rem 1.75rem; margin-bottom: 2rem; }
+    .q-label { font-size: 0.75rem; font-weight: 600; color: #76bccf; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 0.75rem; text-align: center; }
+    .video-boks { width: 100%; aspect-ratio: 16/9; background: #13132e; border-radius: 10px; margin-bottom: 1.5rem; overflow: hidden; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.4); font-size: 0.9rem; }
+    .video-boks iframe { width: 100%; height: 100%; border: none; }
+    .q-tekst-boks { background: #ffffff; border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; text-align: center; }
+    .q-tekst-boks p { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: #1a1a3e; line-height: 1.4; }
+    .alternativer { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 1.25rem; }
+    .alternativer input[type="radio"] { display: none; }
+    .alternativer label { display: flex; align-items: center; gap: 0.75rem; border-radius: 10px; padding: 1rem 1.2rem; cursor: pointer; font-size: 0.95rem; font-weight: 600; color: #ffffff; line-height: 1.3; transition: transform 0.1s, opacity 0.2s; min-height: 64px; }
+    .alternativer label:hover { transform: scale(1.02); }
+    .alt-a { background: #e21b3c; }
+    .alt-b { background: #1368ce; }
+    .alt-c { background: #d89e00; }
+    .alt-d { background: #26890c; }
+    .alt-ikon { width: 28px; height: 28px; border-radius: 4px; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .alternativer input[type="radio"]:checked + label { outline: 4px solid #ffffff; transform: scale(1.02); }
+    .vis-svar-btn { display: block; width: 100%; background: #3097b1; color: #ffffff; border: none; padding: 0.9rem; border-radius: 10px; font-family: 'Source Sans 3', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.1s; letter-spacing: 0.5px; }
+    .vis-svar-btn:hover { background: #195a91; transform: scale(1.01); }
+    .fasit { margin-top: 1rem; padding: 1rem 1.25rem; border-radius: 10px; font-size: 0.95rem; font-weight: 700; text-align: center; display: none; }
+    .fasit.riktig { background: #26890c; color: #ffffff; display: block; }
+    .fasit.feil   { background: #e21b3c; color: #ffffff; display: block; }
+    .fasit.info { background: #1368ce; color: #ffffff; display: block; }
+    .q-nummer { text-align: center; color: rgba(255,255,255,0.3); font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; margin: 0.5rem 0 2rem; text-transform: uppercase; }
+    .resultat-kort { background: linear-gradient(135deg, #76bccf, #3097b1); color: #ffffff; border-radius: 18px; padding: 2rem 1.75rem; margin-top: 2.5rem; box-shadow: 0 16px 40px rgba(0,0,0,0.2); }
+    .resultat-kort h2 { font-family: 'Playfair Display', serif; font-size: 1.9rem; margin-bottom: 0.65rem; text-align: center; }
+    .resultat-kort p { text-align: center; line-height: 1.6; }
+    .score-line { font-size: 1.15rem; font-weight: 700; margin: 1rem 0 1.5rem; }
+    .leaderboard-wrap { background: rgba(19,19,46,0.18); border-radius: 14px; padding: 1.25rem; margin-top: 1.5rem; }
+    .leaderboard-wrap h3 { font-size: 1rem; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 1rem; text-align: center; }
+    .leaderboard { list-style: none; display: grid; gap: 0.7rem; }
+    .leaderboard li { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 0.85rem; background: rgba(255,255,255,0.15); border-radius: 10px; padding: 0.8rem 0.9rem; }
+    .leaderboard-rank { font-weight: 900; font-size: 1rem; text-align: center; }
+    .leaderboard-name { font-weight: 700; }
+    .leaderboard-score { font-weight: 700; white-space: nowrap; }
+    .leaderboard-empty { text-align: center; color: rgba(255,255,255,0.82); }
+    .resultat-actions { display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap; margin-top: 1.5rem; }
+    .resultat-btn { background: #13132e; color: #ffffff; border: 1px solid rgba(255,255,255,0.35); border-radius: 10px; padding: 0.8rem 1.2rem; font-family: 'Source Sans 3', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: transform 0.15s, background 0.2s; }
+    .resultat-btn:hover { background: #1a1a3e; transform: translateY(-1px); }
+    .skjult { display: none; }
+    @media (max-width: 640px) {
+      .alternativer { grid-template-columns: 1fr; }
+      .leaderboard li { grid-template-columns: 36px 1fr; }
+      .leaderboard-score { grid-column: 2; }
+    }
+    footer { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+<div id="emoji-container"></div>
+
+<nav>
+  <a href="index.html" class="logo"><img src="Logo.png" alt="BleikerQuizzen" /><span class="logo-text">BleikerQuizzen</span></a>
+  <ul>
+    <li><a href="grafisk-profil.html">Grafisk profil</a></li>
+    <li><a href="quiz.html">Quiz</a></li>
+    <li><a href="video.html">Videoinnslag</a></li>
+    <li><a href="some.html">SoMe</a></li>
+  </ul>
+</nav>
+
+<div class="quiz-wrapper">
+
+  <div class="quiz-logo">
+    <img src="Logo.png" alt="BleikerQuizzen logo" />
+  </div>
+
+  <div class="navn-felt">
+    <label for="navn">Skriv inn navnet ditt for å starte!</label>
+    <input type="text" id="navn" placeholder="Navnet ditt..." />
+    <p class="navn-hint">Navnet brukes i poenglisten når du er ferdig med alle 10 spørsmålene.</p>
+  </div>
+
+  <div class="q-card">
+    <div class="q-label">Medier og kommunikasjon</div>
+    <div class="q-tekst-boks"><p>Hva betyr målgruppe i media?</p></div>
+    <div class="alternativer">
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a" class="alt-a"><span class="alt-ikon">▲</span>Hvor reklamen sendes</label>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b" class="alt-b"><span class="alt-ikon">◆</span>Hvem budskapet er laget for</label>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c" class="alt-c"><span class="alt-ikon">●</span>Hvor videoen spilles inn</label>
+      <input type="radio" name="q1" id="q1d">
+      <label for="q1d" class="alt-d"><span class="alt-ikon">■</span>Hvor mange som ser</label>
+    </div>
+    <button class="vis-svar-btn" onclick="visSvar('fasit1','q1','q1b')">Sjekk svar</button>
+    <div class="fasit" id="fasit1"></div>
+  </div>
+  <div class="q-nummer">— 1 av 10 —</div>
+
+  <div class="q-card">
+    <div class="q-label">Medier og kommunikasjon</div>
+    <div class="q-tekst-boks"><p>Hva står RGB for i digital design?</p></div>
+    <div class="alternativer">
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a" class="alt-a"><span class="alt-ikon">▲</span>Red, Green, Blue</label>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b" class="alt-b"><span class="alt-ikon">◆</span>Rapid Graphic Build</label>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c" class="alt-c"><span class="alt-ikon">●</span>Render Graphic Base</label>
+      <input type="radio" name="q2" id="q2d">
+      <label for="q2d" class="alt-d"><span class="alt-ikon">■</span>Red Gradient Blend</label>
+    </div>
+    <button class="vis-svar-btn" onclick="visSvar('fasit2','q2','q2a')">Sjekk svar</button>
+    <div class="fasit" id="fasit2"></div>
+  </div>
+  <div class="q-nummer">— 2 av 10 —</div>
+
+  <div class="q-card">
+    <div class="q-label">Medier og kommunikasjon</div>
+    <div class="q-tekst-boks"><p>Hva er en storyboard?</p></div>
+    <div class="alternativer">
+      <input type="radio" name="q3" id="q3a">
+      <label for="q3a" class="alt-a"><span class="alt-ikon">▲</span>En liste over skuespillere</label>
+      <input type="radio" name="q3" id="q3b">
+      <label for="q3b" class="alt-b"><span class="alt-ikon">◆</span>En plan med tegninger av scener i en film</label>
+      <input type="radio" name="q3" id="q3c">
+      <label for="q3c" class="alt-c"><span class="alt-ikon">●</span>En kameratype</label>
+      <input type="radio" name="q3" id="q3d">
+      <label for="q3d" class="alt-d"><span class="alt-ikon">■</span>Et redigeringsprogram</label>
+    </div>
+    <button class="vis-svar-btn" onclick="visSvar('fasit3','q3','q3b')">Sjekk svar</button>
+    <div class="fasit" id="fasit3"></div>
+  </div>
+  <div class="q-nummer">— 3 av 10 —</div>
+
+  <div class="q-card">
+    <div class="q-label">Medier og kommunikasjon</div>
+    <div class="q-tekst-boks"><p>Hva betyr komposisjon i foto?</p></div>
+    <div class="alternativer">
+      <input type="radio" name="q4" id="q4a">
+      <label for="q4a" class="alt-a"><span class="alt-ikon">▲</span>Lysstyrke</label>
+      <input type="radio" name="q4" id="q4b">
+      <label for="q4b" class="alt-b"><span class="alt-ikon">◆</span>Hvordan elementer er plassert i bildet</label>
+      <input type="radio" name="q4" id="q4c">
+      <label for="q4c" class="alt-c"><span class="alt-ikon">●</span>Kameraets størrelse</label>
+      <input type="radio" name="q4" id="q4d">
+      <label for="q4d" class="alt-d"><span class="alt-ikon">■</span>Filformat</label>
+    </div>
+    <button class="vis-svar-btn" onclick="visSvar('fasit4','q4','q4b')">Sjekk svar</button>
+    <div class="fasit" id="fasit4"></div>
+  </div>
+  <div class="q-nummer">— 4 av 10 —</div>
+
+  <div class="q-card">
+    <div class="q-label">Medier og kommunikasjon</div>
+    <div class="q-tekst-boks"><p>Hva er et virkemiddel i reklame?</p></div>
+    <div class="alternativer">
+      <input type="radio" name="q5" id="q5a">
+      <label for="q5a" class="alt-a"><span class="alt-ikon">▲</span>Humor</label>
+      <input type="radio" name="q5" id="q5b">
+      <label for="q5b" class="alt-b"><span class="alt-ikon">◆</span>Kamera</label>
+      <input type="radio" name="q5" id="q5c">
+      <label for="q5c" class="alt-c"><span class="alt-ikon">●</span>Batteri</label>
+      <input type="radio" name="q5" id="q5d">
+      <label for="q5d" class="alt-d"><span class="alt-ikon">■</span>Mikrofon</label>
+    </div>
+    <button class="vis-svar-btn" onclick="visSvar('fasit5','q5','q5a')">Sjekk svar</button>
+    <div class="fasit" id="fasit5"></div>
+  </div>
+  <div class="q-nummer">— 5 av 10 —</div>
+
+  <div class="q-card">
+    <div class="q-label">Medier og kommunikasjon</div>
+    <div class="q-tekst-boks"><p>Hva betyr begrepet algoritme i sosiale medier?</p></div>
+    <div class="alternativer">
+      <input type="radio" name="q6" id="q6a">
+      <label for="q6a" class="alt-a"><span class="alt-ikon">▲</span>Program som bestemmer hva brukere ser</label>
+      <input type="radio" name="q6" id="q6b">
+      <label for="q6b" class="alt-b"><span class="alt-ikon">◆</span>Kameraeffekt</label>
+      <input type="radio" name="q6" id="q6c">
+      <label for="q6c" class="alt-c"><span class="alt-ikon">●</span>Filformat</label>
+      <input type="radio" name="q6" id="q6d">
+      <label for="q6d" class="alt-d"><span class="alt-ikon">■</span>Lydteknikk</label>
+    </div>
+    <button class="vis-svar-btn" onclick="visSvar('fasit6','q6','q6a')">Sjekk svar</button>
+    <div class="fasit" id="fasit6"></div>
+  </div>
+  <div class="q-nummer">— 6 av 10 —</div>
+
+  <div class="q-card">
+    <div class="q-label">Medier og kommunikasjon</div>
+    <div class="q-tekst-boks"><p>Hva betyr opphavsrett?</p></div>
+    <div class="alternativer">
+      <input type="radio" name="q7" id="q7a">
+      <label for="q7a" class="alt-a"><span class="alt-ikon">▲</span>Rett til å kopiere alt</label>
+      <input type="radio" name="q7" id="q7b">
+      <label for="q7b" class="alt-b"><span class="alt-ikon">◆</span>Rettigheter til eget kreativt arbeid</label>
+      <input type="radio" name="q7" id="q7c">
+      <label for="q7c" class="alt-c"><span class="alt-ikon">●</span>Rett til gratis programvare</label>
+      <input type="radio" name="q7" id="q7d">
+      <label for="q7d" class="alt-d"><span class="alt-ikon">■</span>Rett til reklame</label>
+    </div>
+    <button class="vis-svar-btn" onclick="visSvar('fasit7','q7','q7b')">Sjekk svar</button>
+    <div class="fasit" id="fasit7"></div>
+  </div>
+  <div class="q-nummer">— 7 av 10 —</div>
+
+  <div class="q-card">
+    <div class="q-label">Medier og kommunikasjon</div>
+    <div class="q-tekst-boks"><p>Hva brukes Adobe Premiere mest til?</p></div>
+    <div class="alternativer">
+      <input type="radio" name="q8" id="q8a">
+      <label for="q8a" class="alt-a"><span class="alt-ikon">▲</span>Bilderedigering</label>
+      <input type="radio" name="q8" id="q8b">
+      <label for="q8b" class="alt-b"><span class="alt-ikon">◆</span>Videoredigering</label>
+      <input type="radio" name="q8" id="q8c">
+      <label for="q8c" class="alt-c"><span class="alt-ikon">●</span>3D-modellering</label>
+      <input type="radio" name="q8" id="q8d">
+      <label for="q8d" class="alt-d"><span class="alt-ikon">■</span>Spilldesign</label>
+    </div>
+    <button class="vis-svar-btn" onclick="visSvar('fasit8','q8','q8b')">Sjekk svar</button>
+    <div class="fasit" id="fasit8"></div>
+  </div>
+  <div class="q-nummer">— 8 av 10 —</div>
+
+  <div class="q-card">
+    <div class="q-label">Medier og kommunikasjon</div>
+    <div class="q-tekst-boks"><p>Hva er clickbait?</p></div>
+    <div class="alternativer">
+      <input type="radio" name="q9" id="q9a">
+      <label for="q9a" class="alt-a"><span class="alt-ikon">▲</span>Overskrifter som lokker til klikk</label>
+      <input type="radio" name="q9" id="q9b">
+      <label for="q9b" class="alt-b"><span class="alt-ikon">◆</span>Kameraeffekt</label>
+      <input type="radio" name="q9" id="q9c">
+      <label for="q9c" class="alt-c"><span class="alt-ikon">●</span>Lydfilter</label>
+      <input type="radio" name="q9" id="q9d">
+      <label for="q9d" class="alt-d"><span class="alt-ikon">■</span>Videoformat</label>
+    </div>
+    <button class="vis-svar-btn" onclick="visSvar('fasit9','q9','q9a')">Sjekk svar</button>
+    <div class="fasit" id="fasit9"></div>
+  </div>
+  <div class="q-nummer">— 9 av 10 —</div>
+
+  <div class="q-card">
+    <div class="q-label">Medier og kommunikasjon</div>
+    <div class="video-boks">
+      <iframe src="https://drive.google.com/file/d/1CuLgdzCoIZPOCXgaLz7tvFNrawZnbL8t/preview" allow="autoplay" allowfullscreen title="Videospørsmål BleikerQuizzen"></iframe>
+    </div>
+    <div class="q-tekst-boks"><p>Hvorfor er påsken knyttet til gul?</p></div>
+    <div class="alternativer">
+      <input type="radio" name="q10" id="q10a">
+      <label for="q10a" class="alt-a"><span class="alt-ikon">▲</span>Gult er kult</label>
+      <input type="radio" name="q10" id="q10b">
+      <label for="q10b" class="alt-b"><span class="alt-ikon">◆</span>Jesus korsfestelse</label>
+      <input type="radio" name="q10" id="q10c">
+      <label for="q10c" class="alt-c"><span class="alt-ikon">●</span>Symbolene på våren, nytt liv og energi</label>
+      <input type="radio" name="q10" id="q10d">
+      <label for="q10d" class="alt-d"><span class="alt-ikon">■</span>Jeg vet ikke</label>
+    </div>
+    <button class="vis-svar-btn" onclick="visSvar('fasit10','q10','q10c')">Sjekk svar</button>
+    <div class="fasit" id="fasit10"></div>
+  </div>
+  <div class="q-nummer">— 10 av 10 —</div>
+
+  <section class="resultat-kort skjult" id="resultat-kort">
+    <h2>Resultat</h2>
+    <p id="resultat-tekst">Svar på alle spørsmålene for å se poengsummen din.</p>
+    <p class="score-line" id="score-line"></p>
+
+    <div class="leaderboard-wrap">
+      <h3>Toppliste</h3>
+      <ol class="leaderboard" id="leaderboard"></ol>
+      <p class="leaderboard-empty skjult" id="leaderboard-empty">Ingen resultater ennå. Du kan bli den første på listen.</p>
+    </div>
+
+    <div class="resultat-actions">
+      <button type="button" class="resultat-btn" id="lagre-score-btn">Lagre poeng</button>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <a href="index.html" class="logo"><img src="Logo.png" alt="BleikerQuizzen" /></a>
+  <p>Laget av <strong style="color:white;">Artem</strong></p>
+  <p><a href="mailto:sandeckijartem87@gmail.com">Kontakt</a></p>
+</footer>
+
+<script>
+  const container = document.getElementById('emoji-container');
+  const emojis = ['👅', '🧶', '🐱', '🦀', '🌖'];
+  const leaderboardKey = 'bleikerquizzenLeaderboard';
+  const totalQuestions = 10;
+  const checkedQuestions = new Set();
+  let score = 0;
+  let scoreSaved = false;
+
+  const resultCard = document.getElementById('resultat-kort');
+  const resultText = document.getElementById('resultat-tekst');
+  const scoreLine = document.getElementById('score-line');
+  const leaderboardList = document.getElementById('leaderboard');
+  const leaderboardEmpty = document.getElementById('leaderboard-empty');
+  const saveScoreButton = document.getElementById('lagre-score-btn');
+  const nameInput = document.getElementById('navn');
+  let emojiIntervalId = null;
+  let celebrationStarted = false;
+
+  function createEmoji() {
+    const span = document.createElement('span');
+    span.className = 'emoji';
+    span.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    span.style.left = `${Math.random() * 100}vw`;
+    span.style.top = `-10vh`;
+    span.style.fontSize = `${Math.random() * 24 + 16}px`;
+    span.style.animationDuration = `${Math.random() * 2 + 4}s`;
+    span.style.animationDelay = `${Math.random() * 2}s`;
+    container.appendChild(span);
+    const lifetime = (parseFloat(span.style.animationDuration) + parseFloat(span.style.animationDelay) + 0.2) * 1000;
+    setTimeout(() => { span.remove(); }, lifetime);
+  }
+
+  function startCelebration() {
+    if (celebrationStarted) {
+      return;
+    }
+
+    celebrationStarted = true;
+
+    for (let i = 0; i < 18; i++) { createEmoji(); }
+    emojiIntervalId = setInterval(createEmoji, 300);
+  }
+
+  function getLeaderboard() {
+    try {
+      const saved = localStorage.getItem(leaderboardKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveLeaderboard(entries) {
+    localStorage.setItem(leaderboardKey, JSON.stringify(entries));
+  }
+
+  function renderLeaderboard() {
+    const entries = getLeaderboard();
+    leaderboardList.innerHTML = '';
+
+    if (!entries.length) {
+      leaderboardEmpty.classList.remove('skjult');
+      return;
+    }
+
+    leaderboardEmpty.classList.add('skjult');
+
+    entries.forEach(function(entry, index) {
+      const item = document.createElement('li');
+      item.innerHTML = '<span class="leaderboard-rank">#' + (index + 1) + '</span>' +
+        '<span class="leaderboard-name">' + entry.name + '</span>' +
+        '<span class="leaderboard-score">' + entry.score + ' / ' + totalQuestions + '</span>';
+      leaderboardList.appendChild(item);
+    });
+  }
+
+  function updateResultCard() {
+    resultCard.classList.remove('skjult');
+
+    if (checkedQuestions.size < totalQuestions) {
+      const remaining = totalQuestions - checkedQuestions.size;
+      resultText.textContent = 'Du har ' + remaining + ' spørsmål igjen før resultatet blir klart.';
+      scoreLine.textContent = 'Poeng så langt: ' + score + ' / ' + totalQuestions;
+      saveScoreButton.disabled = true;
+      saveScoreButton.textContent = 'Svar på alle spørsmål først';
+      return;
+    }
+
+    resultText.textContent = 'Quiz ferdig! Nå kan du lagre resultatet ditt i topplisten.';
+    scoreLine.textContent = 'Du fikk ' + score + ' av ' + totalQuestions + ' riktige.';
+    saveScoreButton.disabled = scoreSaved;
+    saveScoreButton.textContent = scoreSaved ? 'Poeng lagret' : 'Lagre poeng';
+    startCelebration();
+  }
+
+  function saveScore() {
+    const playerName = nameInput.value.trim();
+
+    if (checkedQuestions.size < totalQuestions) {
+      updateResultCard();
+      return;
+    }
+
+    if (!playerName) {
+      resultText.textContent = 'Skriv inn navnet ditt før du lagrer poengsummen.';
+      nameInput.focus();
+      return;
+    }
+
+    if (scoreSaved) {
+      resultText.textContent = 'Poengsummen din er allerede lagret i topplisten.';
+      return;
+    }
+
+    const entries = getLeaderboard();
+    entries.push({ name: playerName, score: score });
+    entries.sort(function(a, b) {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      return a.name.localeCompare(b.name, 'no');
+    });
+
+    saveLeaderboard(entries.slice(0, 5));
+    scoreSaved = true;
+    resultText.textContent = 'Flott! ' + playerName + ' er nå lagt inn i topplisten.';
+    updateResultCard();
+    renderLeaderboard();
+  }
+
+  function visSvar(fasitId, gruppeNavn, riktigId) {
+    var valgt = document.querySelector('input[name="' + gruppeNavn + '"]:checked');
+    var fasit = document.getElementById(fasitId);
+    if (!valgt) {
+      fasit.className = 'fasit info';
+      fasit.textContent = 'Velg et alternativ først!';
+      return;
+    }
+    if (checkedQuestions.has(gruppeNavn)) {
+      return;
+    }
+    if (valgt.id === riktigId) {
+      fasit.className = 'fasit riktig';
+      fasit.textContent = '✓ Riktig! 🎉';
+      score += 1;
+    } else {
+      var riktigLabel = document.querySelector('label[for="' + riktigId + '"]');
+      fasit.className = 'fasit feil';
+      fasit.textContent = '✗ Feil! Riktig svar: ' + riktigLabel.textContent.trim();
+    }
+    checkedQuestions.add(gruppeNavn);
+    document.querySelectorAll('input[name="' + gruppeNavn + '"]').forEach(function(r) { r.disabled = true; });
+    updateResultCard();
+  }
+
+  saveScoreButton.addEventListener('click', saveScore);
+
+  renderLeaderboard();
+  updateResultCard();
+</script>
+
+</body>
+</html>
